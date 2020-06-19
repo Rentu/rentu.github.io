@@ -10,7 +10,7 @@
   
   <title>
     
-      Linux 如何定位文件锁的问题 | Devilu
+      详解快速排序 | Devilu
     
   </title>
   <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -145,8 +145,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>Linux 如何定位文件锁的问题</h2>
-  <p class="post-date">2020-06-09</p>
+  <h2>详解快速排序</h2>
+  <p class="post-date">2020-06-19</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -154,29 +154,33 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>以php举例，在php里，session默认是文件存储的，同一个用户同一个cookie，session文件是固定的。</p>
-<blockquote>
-<p>以下php说的情况都是同一个用户同一个cookie</p>
-</blockquote>
-<p>那么，我们模拟一种情况，在一个多核CPU机器上，php-fpm设置多一点，保证，有进程可以处理请求，且资源打不满，同一个用户发起多个请求，其中一个请求 while(true)</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gfm2nr3w05j30hk0cwdgt.jpg" alt="image-20200609152817053"></p>
-<p>可以看到这里后续的请求都pending了</p>
-<p>我们查找下原因，通过 <code>cat /proc/locks</code> 来查看文件锁</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gfm2ndmdesj311y0j0dkn.jpg" alt="image-20200609153136454"></p>
-<p>我们发现了7609进程，锁住了id为3678229的文件，-&gt;表示有多少进程在等待7609释放锁，然后我们通过 <code>lsof -p</code> 来查看这个进程锁住了哪些文件</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gfm2p2h3v2j31p003m3zl.jpg" alt="image-20200609153317679"></p>
-<p>通过一顿操作，我们找到了这个文件</p>
-<p><code>/var/lib/php/session/sess_6r3vba026jj0dsravtubgq8rt0</code></p>
-<p>一看session，也就找到原因，找响应的解决办法就可以了，譬如这里，在执行while前调用 sesssion_write_close 就可以了</p>
-<p>其他问题类似。</p>
+    <section class="markdown-content"><p>感觉又是一个容易忘记的东西，记下笔记，用于日后复习</p>
+<h2 id="写法一"><a href="#写法一" class="headerlink" title="写法一"></a>写法一</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sort</span><span class="params">(<span class="keyword">int</span>[] ints, <span class="keyword">int</span> l , <span class="keyword">int</span> r)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> left = l;</span><br><span class="line">    <span class="keyword">int</span> right = r;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> base = ints[(l+r)/<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(left &lt;= right)&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (ints[left] &lt; base)</span><br><span class="line">            left++;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (ints[right] &gt; base)</span><br><span class="line">            right--;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(left &lt;= right)&#123;</span><br><span class="line">            <span class="keyword">int</span> tmp = ints[left];</span><br><span class="line">            ints[left] = ints[right];</span><br><span class="line">            ints[right] = tmp;</span><br><span class="line">            left++;</span><br><span class="line">            right--;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// only one</span></span><br><span class="line">    <span class="keyword">if</span>(l &lt; right)&#123;</span><br><span class="line">        sort(ints, l, right);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(left &lt; r)&#123;</span><br><span class="line">        sort(ints, left, r);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>递归实现的快排，重点就是快排的思想分治，以及递归出口的理解</p>
+<h3 id="分治"><a href="#分治" class="headerlink" title="分治"></a>分治</h3><p>选取一个基准值，保证基准值不变，比基准值小的放左边，大的放右边，一次排序的完结标志就是，left = right ，结果是把一个元素放在它该放的位置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (ints[left] &lt; ints[base])</span><br><span class="line">    left++;</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (ints[right] &gt; ints[base])</span><br><span class="line">    right--;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面代码的解释就是：</p>
+<p>如果左边的值比基准值小就不处理（因为已经符合当次排序的结果），直到找到大于等于基准值的，于是左边的下标一直往右移动</p>
+<p>如果右边的值比基准值大就不处理（因为已经符合当次排序的结果），直到找到小于等于基准值的，于是右边的下标一直往左移动</p>
+<p>当他们碰撞以后，也就说明，左边的都比基准值小，右边的都比基准值大，一次排序完成</p>
+<h3 id="递归出口"><a href="#递归出口" class="headerlink" title="递归出口"></a>递归出口</h3><p>当只有一个元素的时候便不用排序了</p>
+<p>未完待定</p>
 </section>
     <!-- Tags START -->
     
       <div class="tags">
         <span>Tags:</span>
         
-  <a href="/tags#Linux" >
-    <span class="tag-code">Linux</span>
+  <a href="/tags#算法" >
+    <span class="tag-code">算法</span>
+  </a>
+
+  <a href="/tags#数据结构" >
+    <span class="tag-code">数据结构</span>
   </a>
 
       </div>
@@ -187,20 +191,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/05/09/%E8%AF%A6%E8%A7%A3%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91/">
+      <a class="nav-left" href="/2020/06/09/Linux-%E5%A6%82%E4%BD%95%E5%AE%9A%E4%BD%8D%E6%96%87%E4%BB%B6%E9%94%81%E7%9A%84%E9%97%AE%E9%A2%98/">
         <span class="nav-arrow">← </span>
         
-          详解二叉搜索树
+          Linux 如何定位文件锁的问题
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/06/19/%E8%AF%A6%E8%A7%A3%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F/">
-        
-          详解快速排序
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -244,7 +241,7 @@
   <div class="toc-main">
     <strong class="toc-title">Catalog</strong>
     
-      <ol class="nav">none</ol>
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#写法一"><span class="toc-nav-text">写法一</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#分治"><span class="toc-nav-text">分治</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#递归出口"><span class="toc-nav-text">递归出口</span></a></li></ol></li></ol>
     
   </div>
 </aside>
@@ -254,7 +251,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/06/09/Linux-如何定位文件锁的问题/';
+    var url = 'https://rentu.github.io/2020/06/19/详解快速排序/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
