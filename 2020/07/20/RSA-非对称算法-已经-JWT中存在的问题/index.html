@@ -10,7 +10,7 @@
   
   <title>
     
-      php7 安装phalcon 扩展 -- docker centos7 | Devilu
+      RSA 非对称算法 以及JWT中存在的问题 | Devilu
     
   </title>
   <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -145,8 +145,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>php7 安装phalcon 扩展 -- docker centos7</h2>
-  <p class="post-date">2020-07-09</p>
+  <h2>RSA 非对称算法 以及JWT中存在的问题</h2>
+  <p class="post-date">2020-07-20</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -154,32 +154,31 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>网上安装 phalcon 扩展的文章较多，但用docker装了centos，在centos安装php扩展的文章比较少，这里记录一下，希望能给一些人带来帮助</p>
-<p>先说下问题，要安装和 php 版本匹配的  扩展，去pecl上看发现要求 版本大于7.2 了，于是，去github下载编译安装，也是可以解决任何版本的万金油。</p>
-<p>找到与你php版本匹配的分支，我这里是3.4.x</p>
-<p><a href="https://github.com/phalcon/cphalcon.git" target="_blank" rel="noopener">https://github.com/phalcon/cphalcon.git</a></p>
-<p>git fetch</p>
-<p>git branch -a</p>
-<p>Git checkout 3.4.x</p>
-<p>cd build</p>
-<p>这里 yum/apt-get 装一下必要的依赖</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ggkqgtkl2pj31320me0vf.jpg" alt="image-20200709150454037"></p>
-<p>这里如果你phpize 和 php-config的路径不是 /usr/bin/ 需要修改下路径，可以修改install 文件，具体google</p>
-<p>./install </p>
-<p>install 这一步碰到了两个问题，</p>
-<p>第一个 ： gcc: internal compiler error: Killed (program cc1)，这里查资料说是内存不足，于是，更新了docker的内存 docker update -m, 重启服务器</p>
-<p>第二个： Unable to load dynamic library ‘/usr/lib64/php/modules/phalcon.so’   我的写法是在php.ini 里直接加上了 extension=phalcon.so</p>
-<p>解决这个问题，在/etc/php.d 文件夹下建立一个 phalcon.ini 然后 写入extension=phalcon.so，重启就好了</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ggkqns9fx0j31u00len1e.jpg" alt="image-20200709150539909"></p>
-<p>至此phalcon 安装成功</p>
+    <section class="markdown-content"><p>​    常见的加密方案一般有对称加密和非对称加密，对称加密就是两人持有相同的key（密钥），双方共同加密同一组数据，比较加密后的结果是否相等的一种方案，但这种方案有个坏处就是，密钥暴露，想解密就得把你的密钥告诉别人。</p>
+<p>​    另一种就是非对称加密，非对称加密算法的一些原理，其实是一些数学知识，这里简单介绍下。</p>
+<p>​    通过这篇文章你可以知道，RSA算法可靠的原理，512位和1024位等的区别以及如何选择，JWT设计中存在的问题</p>
+<h2 id="欧拉定理-amp-amp-模逆元"><a href="#欧拉定理-amp-amp-模逆元" class="headerlink" title="欧拉定理 &amp;&amp; 模逆元"></a>欧拉定理 &amp;&amp; 模逆元</h2><p>​    1977年，三位数学家Rivest、Shamir 和 Adleman 设计了一种算法，可以实现非对称加密。这种算法用他们三个人的名字命名，叫做<a href="http://zh.wikipedia.org/zh-cn/RSA加密算法" target="_blank" rel="noopener">RSA算法</a>。从那时直到现在，RSA算法一直是最广为使用的”非对称加密算法”。</p>
+<p>​    关于欧拉定理的一些说明，阮一峰大神的博客里已经有了详细且易懂的一些介绍，<a href="http://www.ruanyifeng.com/blog/2013/06/rsa_algorithm_part_one.html" target="_blank" rel="noopener">http://www.ruanyifeng.com/blog/2013/06/rsa_algorithm_part_one.html</a></p>
+<p>​    这里主要做一些补充说明：</p>
+<ol>
+<li>利用欧拉定理得出公钥和私钥，主要是根据n和e套用公司计算模反元素d，n和e 组成公钥，n和d组成私钥</li>
+<li>RSA算法保证可靠性的原理是基于对极大整数做因数分解的困难性非常高，所以存在512位，1024位，2048位，1024位基本安全，2048位极其安全</li>
+<li>解密的原理也是，根据欧拉公式和已知数推出未知数（明文）的过程</li>
+</ol>
+<h2 id="JWT-和-RSA"><a href="#JWT-和-RSA" class="headerlink" title="JWT 和 RSA"></a>JWT 和 RSA</h2><p>​    服务端保留私钥和公钥，客户端只保留公钥，私钥加密token，返回给客户端，客户端用公钥解密，除非私钥泄漏，不然，这种算法是很安全的。</p>
+<h2 id="JWT-中存在的问题"><a href="#JWT-中存在的问题" class="headerlink" title="JWT 中存在的问题"></a>JWT 中存在的问题</h2><p>​    JWT 其实就是通过服务端的运算，把一些用户信息写到一个json里面，然后对其加密不存储返回给客户端，重点就是这个服务端不存储，带来了一些问题，正常情况下是没什么太大问题的，但假设开发人员掌握了服务端的密钥然后他又离职了，于是这个人就可以构造任何人的数据了，我觉得这是极其危险的，我想的一个解决方案就是，通过分布式配置中心解决这个问题，不硬编码在代码里面，除非研发人员通过打日志方式查看，这就太明显了容易被发现，可以提高安全性。</p>
 </section>
     <!-- Tags START -->
     
       <div class="tags">
         <span>Tags:</span>
         
-  <a href="/tags#php" >
-    <span class="tag-code">php</span>
+  <a href="/tags#算法" >
+    <span class="tag-code">算法</span>
+  </a>
+
+  <a href="/tags#Web 解决方案" >
+    <span class="tag-code">Web 解决方案</span>
   </a>
 
       </div>
@@ -190,20 +189,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/06/19/%E8%AF%A6%E8%A7%A3%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F/">
+      <a class="nav-left" href="/2020/07/09/php7-%E5%AE%89%E8%A3%85phalcon-%E6%89%A9%E5%B1%95-docker-centos7/">
         <span class="nav-arrow">← </span>
         
-          详解快速排序
+          php7 安装phalcon 扩展 -- docker centos7
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/07/20/RSA-%E9%9D%9E%E5%AF%B9%E7%A7%B0%E7%AE%97%E6%B3%95-%E5%B7%B2%E7%BB%8F-JWT%E4%B8%AD%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98/">
-        
-          RSA 非对称算法 以及JWT中存在的问题
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -247,7 +239,7 @@
   <div class="toc-main">
     <strong class="toc-title">Catalog</strong>
     
-      <ol class="nav">none</ol>
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#欧拉定理-amp-amp-模逆元"><span class="toc-nav-text">欧拉定理 &amp;&amp; 模逆元</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#JWT-和-RSA"><span class="toc-nav-text">JWT 和 RSA</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#JWT-中存在的问题"><span class="toc-nav-text">JWT 中存在的问题</span></a></li></ol>
     
   </div>
 </aside>
@@ -257,7 +249,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/07/09/php7-安装phalcon-扩展-docker-centos7/';
+    var url = 'https://rentu.github.io/2020/07/20/RSA-非对称算法-已经-JWT中存在的问题/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
