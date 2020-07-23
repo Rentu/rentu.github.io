@@ -10,7 +10,7 @@
   
   <title>
     
-      关于游戏中用户缓存的设计构想 | Devilu
+      Spring 是如何解决循环依赖的 | Devilu
     
   </title>
   <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -145,8 +145,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>关于游戏中用户缓存的设计构想</h2>
-  <p class="post-date">2020-07-22</p>
+  <h2>Spring 是如何解决循环依赖的</h2>
+  <p class="post-date">2020-07-23</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -154,18 +154,29 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>游戏中通常会有一个游戏大厅，在进入游戏大厅的时候会获取很多玩家的一些道具数据或者其他数据，这个数据通常是查询mysql然后存到redis里面，最近在看JWT，发现了JWT里有一些弊端，譬如，撤销令牌并不怎么方便也很反人类，但是，如果把JWT的自描述和redis结合起来呢，就可以实现下面的构想：</p>
+    <section class="markdown-content"><p>一般想到这个问题，答案就是三级缓存，那么问题又来了，缓存的啥？用啥缓存的？为啥是三级不是二级？</p>
+<p>三级缓存指的其实就是三个Map。源码如下图</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Cache of singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; singletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">256</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Cache of singleton factories: bean name to ObjectFactory. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Cache of early singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; earlySingletonObjects = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>用白话讲就是，创建三个map，存储对象的三个状态，对于属性依赖（也是最常见的），构造器依赖也是给你抛出错误，实在上并解决不了，为啥解决不了呢？因为一个对象想被引用，他首先得被实例化，所以，如果构造器里存在依赖那就不行了，但属性却可以后续设置, 整体流程如下图：</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh0vllzolfj30qy0d2my0.jpg" alt="image-20200723141132352"></p>
 <ol>
-<li>把用户部分非隐私数据放到JWT里面，譬如，一些道具信息，关卡进度，至于放多少，包体大小的控制需要不断的压测去定义 ，找寻一个最佳值。</li>
-<li>保证每个用户只有一个有效的JWT，把JWT和用户id关联起来放到redis，这样既可以控制JWT的撤销又能提高安全性，性能上，部分信息可以从JWT的自描述中获取不需要再去查询redis</li>
-<li>在相关字段更新的时候重新构造JWT下发给客户端，记录JWT的更新次数或者更新时间，同时写入JWT和redis，等客户端下次传递过来JWT的时候，可以校验是否为最后一次生成的有效包体</li>
-<li>这里的JWT不局限于登陆，完全可以做通用参数传递，减少数据库和缓存查询</li>
-<li>安全性思考：<ol>
-<li>服务端用私钥加密，可以保证包体不被篡改</li>
-<li>私钥可以通过配置中心或者动态获取，杜绝研发人员直接接触私钥</li>
-<li>redis里存储了最新版本的JWT，可以保证只有一个最新版本的JWT生效</li>
+<li><code>singletonObjects</code>，一级缓存，存储的是所有创建好了的单例Bean</li>
+<li><code>earlySingletonObjects</code>，二级缓存，完成实例化，但是还未进行属性注入及初始化的对象</li>
+<li><code>singletonFactories</code>，三级缓存，提前暴露的一个单例工厂，二级缓存中存储的就是从这个工厂中获取到的对象</li>
 </ol>
-</li>
+<p>用两级缓存行不行？行</p>
+<p>那为什么用三级缓存？</p>
+<p>解决代理对象的问题</p>
+<p>为啥要解决代理对象的问题，代理对象，就是做个代理，别去访问原对象了，所以，注入的时候，你也应该注入我的代理，啥事也别找我，都找我代理</p>
+<p>如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过<code>AnnotationAwareAspectJAutoProxyCreator</code>这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理。</p>
+<p>所以做个总结就是：</p>
+<ol>
+<li>缓存的啥？各种状态的Bean</li>
+<li>用啥缓存的？Map</li>
+<li>为啥三级？不是二级？见上面</li>
 </ol>
 </section>
     <!-- Tags START -->
@@ -173,8 +184,12 @@
       <div class="tags">
         <span>Tags:</span>
         
-  <a href="/tags#解决方案" >
-    <span class="tag-code">解决方案</span>
+  <a href="/tags#java" >
+    <span class="tag-code">java</span>
+  </a>
+
+  <a href="/tags#Spring" >
+    <span class="tag-code">Spring</span>
   </a>
 
       </div>
@@ -185,20 +200,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/07/20/RSA-%E9%9D%9E%E5%AF%B9%E7%A7%B0%E7%AE%97%E6%B3%95-%E5%B7%B2%E7%BB%8F-JWT%E4%B8%AD%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98/">
+      <a class="nav-left" href="/2020/07/22/%E5%85%B3%E4%BA%8E%E6%B8%B8%E6%88%8F%E4%B8%AD%E7%94%A8%E6%88%B7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%9E%84%E6%83%B3/">
         <span class="nav-arrow">← </span>
         
-          RSA 非对称算法 以及JWT中存在的问题
+          关于游戏中用户缓存的设计构想
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/07/23/Spring-%E6%98%AF%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96%E7%9A%84/">
-        
-          Spring 是如何解决循环依赖的
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -252,7 +260,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/07/22/关于游戏中用户缓存的设计构想/';
+    var url = 'https://rentu.github.io/2020/07/23/Spring-是如何解决循环依赖的/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
