@@ -173,8 +173,38 @@
 <li>干吧</li>
 </ol>
 <p>下载依赖这个情况吧，我是全局替换成了阿里云的镜像，所以就没有再改build.gradle, 在你的用户目录下新建一个init.gradle,填入以下内容</p>
-<p>allprojects{<br>    repositories {<br>        def ALIYUN_REPOSITORY_URL = ‘<a href="https://maven.aliyun.com/repository/public/&#39;" target="_blank" rel="noopener">https://maven.aliyun.com/repository/public/&#39;</a><br>        def ALIYUN_JCENTER_URL = ‘<a href="https://maven.aliyun.com/repository/jcenter/&#39;" target="_blank" rel="noopener">https://maven.aliyun.com/repository/jcenter/&#39;</a><br>        def ALIYUN_GOOGLE_URL = ‘<a href="https://maven.aliyun.com/repository/google/&#39;" target="_blank" rel="noopener">https://maven.aliyun.com/repository/google/&#39;</a><br>        def ALIYUN_GRADLE_PLUGIN_URL = ‘<a href="https://maven.aliyun.com/repository/gradle-plugin/&#39;" target="_blank" rel="noopener">https://maven.aliyun.com/repository/gradle-plugin/&#39;</a><br>        all { ArtifactRepository repo -&gt;<br>            if(repo instanceof MavenArtifactRepository){<br>                def url = repo.url.toString()<br>                if (url.startsWith(‘<a href="https://repo1.maven.org/maven2/&#39;" target="_blank" rel="noopener">https://repo1.maven.org/maven2/&#39;</a>)) {<br>                    project.logger.lifecycle “Repository ${repo.url} replaced by $ALIYUN_REPOSITORY_URL.”<br>                    remove repo<br>                }<br>                if (url.startsWith(‘<a href="https://jcenter.bintray.com/&#39;" target="_blank" rel="noopener">https://jcenter.bintray.com/&#39;</a>)) {<br>                    project.logger.lifecycle “Repository ${repo.url} replaced by $ALIYUN_JCENTER_URL.”<br>                    remove repo<br>                }<br>                if (url.startsWith(‘<a href="https://dl.google.com/dl/android/maven2/&#39;" target="_blank" rel="noopener">https://dl.google.com/dl/android/maven2/&#39;</a>)) {<br>                    project.logger.lifecycle “Repository ${repo.url} replaced by $ALIYUN_GOOGLE_URL.”<br>                    remove repo<br>                }<br>                if (url.startsWith(‘<a href="https://plugins.gradle.org/m2/&#39;" target="_blank" rel="noopener">https://plugins.gradle.org/m2/&#39;</a>)) {<br>                    project.logger.lifecycle “Repository ${repo.url} replaced by $ALIYUN_GRADLE_PLUGIN_URL.”<br>                    remove repo<br>                }<br>            }<br>        }<br>        maven { url ALIYUN_REPOSITORY_URL }<br>        maven { url ALIYUN_JCENTER_URL }<br>        maven { url ALIYUN_GOOGLE_URL }<br>        maven { url ALIYUN_GRADLE_PLUGIN_URL }<br>    }<br>}</p>
-<p>然后，开始编译，我是遇到了各种各样的错，错误列表如下</p>
+<pre><code>allprojects{
+repositories {
+    def ALIYUN_REPOSITORY_URL = &apos;https://maven.aliyun.com/repository/public/&apos;
+    def ALIYUN_JCENTER_URL = &apos;https://maven.aliyun.com/repository/jcenter/&apos;
+    def ALIYUN_GOOGLE_URL = &apos;https://maven.aliyun.com/repository/google/&apos;
+    def ALIYUN_GRADLE_PLUGIN_URL = &apos;https://maven.aliyun.com/repository/gradle-plugin/&apos;
+    all { ArtifactRepository repo -&gt;
+        if(repo instanceof MavenArtifactRepository){
+            def url = repo.url.toString()
+            if (url.startsWith(&apos;https://repo1.maven.org/maven2/&apos;)) {
+                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_REPOSITORY_URL.&quot;
+                remove repo
+            }
+            if (url.startsWith(&apos;https://jcenter.bintray.com/&apos;)) {
+                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_JCENTER_URL.&quot;
+                remove repo
+            }
+            if (url.startsWith(&apos;https://dl.google.com/dl/android/maven2/&apos;)) {
+                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_GOOGLE_URL.&quot;
+                remove repo
+            }
+            if (url.startsWith(&apos;https://plugins.gradle.org/m2/&apos;)) {
+                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_GRADLE_PLUGIN_URL.&quot;
+                remove repo
+            }
+        }
+    }
+    maven { url ALIYUN_REPOSITORY_URL }
+    maven { url ALIYUN_JCENTER_URL }
+    maven { url ALIYUN_GOOGLE_URL }
+    maven { url ALIYUN_GRADLE_PLUGIN_URL }
+}}</code></pre><p>然后，开始编译，我是遇到了各种各样的错，错误列表如下</p>
 <ul>
 <li><p>Received close_notify during handshake，换了Spring版本解决的，搜索无果</p>
 </li>
