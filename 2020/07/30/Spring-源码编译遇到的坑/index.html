@@ -173,38 +173,10 @@
 <li>干吧</li>
 </ol>
 <p>下载依赖这个情况吧，我是全局替换成了阿里云的镜像，所以就没有再改build.gradle, 在你的用户目录下新建一个init.gradle,填入以下内容</p>
-<pre><code>allprojects{
-repositories {
-    def ALIYUN_REPOSITORY_URL = &apos;https://maven.aliyun.com/repository/public/&apos;
-    def ALIYUN_JCENTER_URL = &apos;https://maven.aliyun.com/repository/jcenter/&apos;
-    def ALIYUN_GOOGLE_URL = &apos;https://maven.aliyun.com/repository/google/&apos;
-    def ALIYUN_GRADLE_PLUGIN_URL = &apos;https://maven.aliyun.com/repository/gradle-plugin/&apos;
-    all { ArtifactRepository repo -&gt;
-        if(repo instanceof MavenArtifactRepository){
-            def url = repo.url.toString()
-            if (url.startsWith(&apos;https://repo1.maven.org/maven2/&apos;)) {
-                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_REPOSITORY_URL.&quot;
-                remove repo
-            }
-            if (url.startsWith(&apos;https://jcenter.bintray.com/&apos;)) {
-                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_JCENTER_URL.&quot;
-                remove repo
-            }
-            if (url.startsWith(&apos;https://dl.google.com/dl/android/maven2/&apos;)) {
-                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_GOOGLE_URL.&quot;
-                remove repo
-            }
-            if (url.startsWith(&apos;https://plugins.gradle.org/m2/&apos;)) {
-                project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_GRADLE_PLUGIN_URL.&quot;
-                remove repo
-            }
-        }
-    }
-    maven { url ALIYUN_REPOSITORY_URL }
-    maven { url ALIYUN_JCENTER_URL }
-    maven { url ALIYUN_GOOGLE_URL }
-    maven { url ALIYUN_GRADLE_PLUGIN_URL }
-}}</code></pre><p>然后，开始编译，我是遇到了各种各样的错，错误列表如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">allprojects&#123;</span><br><span class="line">repositories &#123;</span><br><span class="line">    def ALIYUN_REPOSITORY_URL = <span class="string">'https://maven.aliyun.com/repository/public/'</span></span><br><span class="line">    def ALIYUN_JCENTER_URL = <span class="string">'https://maven.aliyun.com/repository/jcenter/'</span></span><br><span class="line">    def ALIYUN_GOOGLE_URL = <span class="string">'https://maven.aliyun.com/repository/google/'</span></span><br><span class="line">    def ALIYUN_GRADLE_PLUGIN_URL = <span class="string">'https://maven.aliyun.com/repository/gradle-plugin/'</span></span><br><span class="line">    all &#123; ArtifactRepository repo -&gt;</span><br><span class="line">        <span class="keyword">if</span>(repo <span class="keyword">instanceof</span> MavenArtifactRepository)&#123;</span><br><span class="line">            def url = repo.url.toString()</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://repo1.maven.org/maven2/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_REPOSITORY_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://jcenter.bintray.com/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_JCENTER_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://dl.google.com/dl/android/maven2/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_GOOGLE_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://plugins.gradle.org/m2/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_GRADLE_PLUGIN_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    maven &#123; url ALIYUN_REPOSITORY_URL &#125;</span><br><span class="line">    maven &#123; url ALIYUN_JCENTER_URL &#125;</span><br><span class="line">    maven &#123; url ALIYUN_GOOGLE_URL &#125;</span><br><span class="line">    maven &#123; url ALIYUN_GRADLE_PLUGIN_URL &#125;</span><br><span class="line">&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>然后开始编译，我是遇到了各种各样的错，错误列表如下</p>
 <ul>
 <li><p>Received close_notify during handshake，换了Spring版本解决的，搜索无果</p>
 </li>
