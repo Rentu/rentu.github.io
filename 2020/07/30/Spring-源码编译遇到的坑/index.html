@@ -10,7 +10,7 @@
   
   <title>
     
-      Spring 是如何解决循环依赖的 | Devilu
+      Spring 源码编译遇到的坑 | Devilu
     
   </title>
   <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -145,8 +145,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>Spring 是如何解决循环依赖的</h2>
-  <p class="post-date">2020-07-23</p>
+  <h2>Spring 源码编译遇到的坑</h2>
+  <p class="post-date">2020-07-30</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -154,30 +154,84 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>一般想到这个问题，答案就是三级缓存，那么问题又来了，缓存的啥？用啥缓存的？为啥是三级不是二级？</p>
-<p>三级缓存指的其实就是三个Map。源码如下图</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Cache of singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; singletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">256</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Cache of singleton factories: bean name to ObjectFactory. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Cache of early singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; earlySingletonObjects = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br></pre></td></tr></table></figure>
-
-
-
-<p>用白话讲就是，创建三个map，存储对象的三个状态，对于属性依赖（也是最常见的），构造器依赖也是给你抛出错误，实在上并解决不了，为啥解决不了呢？因为一个对象想被引用，他首先得被实例化，所以，如果构造器里存在依赖那就不行了，但属性却可以后续设置, 整体流程如下图：</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh0vllzolfj30qy0d2my0.jpg" alt="image-20200723141132352"></p>
+    <section class="markdown-content"><ul>
+<li><p>系统 ： Mac</p>
+</li>
+<li><p>idea版本 ：2019.3</p>
+</li>
+<li><p>gradle ：两个版本，4.10.3 和 5.5.1 </p>
+</li>
+<li><p>Spring 版本：<a href="https://github.com/spring-projects/spring-framework/releases/tag/v5.1.17.RELEASE" target="_blank" rel="noopener">v5.1.17.RELEASE</a> </p>
+</li>
+</ul>
+<p>按照官方给的说明：</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh93nsowgsj31ei0dsac3.jpg" alt="image-20200730165456111"></p>
 <ol>
-<li><code>singletonObjects</code>，一级缓存，存储的是所有创建好了的单例Bean</li>
-<li><code>earlySingletonObjects</code>，二级缓存，完成实例化，但是还未进行属性注入及初始化的对象</li>
-<li><code>singletonFactories</code>，三级缓存，提前暴露的一个单例工厂，二级缓存中存储的就是从这个工厂中获取到的对象</li>
+<li>下载源码，先不要打开，进入源码目录，执行 ./gradlew :spring-oxm:compileTestJava，这个时候它会自动下载gradle 4.10.3 （好吧，我得承认，前前后后，gradle的版本我下载了n个， Spring 的源码版本我也下载了n个， 只有这个编译通过了）</li>
+<li>导入项目 Import into IntelliJ (File -&gt; New -&gt; Project from Existing Sources -&gt; Navigate to directory -&gt; Select build.gradle)</li>
+<li>当你遇到提示时，可以移除 Spring-aspects 这个模块（我没遇到）</li>
+<li>干吧</li>
 </ol>
-<p>用两级缓存行不行？行</p>
-<p>那为什么用三级缓存？</p>
-<p>解决代理对象的问题</p>
-<p>为啥要解决代理对象的问题，代理对象，就是做个代理，别去访问原对象了，所以，注入的时候，你也应该注入我的代理，啥事也别找我，都找我代理</p>
-<p>如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过<code>AnnotationAwareAspectJAutoProxyCreator</code>这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理。</p>
-<p>所以做个总结就是：</p>
-<ol>
-<li>缓存的啥？各种状态的Bean</li>
-<li>用啥缓存的？Map</li>
-<li>为啥三级？不是二级？见上面</li>
-</ol>
+<p>下载依赖这个情况吧，我是全局替换成了阿里云的镜像，所以就没有再改build.gradle, 在你的用户目录下新建一个init.gradle,填入以下内容</p>
+<p><code>allprojects{
+    repositories {
+        def ALIYUN_REPOSITORY_URL = &#39;https://maven.aliyun.com/repository/public/&#39;
+        def ALIYUN_JCENTER_URL = &#39;https://maven.aliyun.com/repository/jcenter/&#39;
+        def ALIYUN_GOOGLE_URL = &#39;https://maven.aliyun.com/repository/google/&#39;
+        def ALIYUN_GRADLE_PLUGIN_URL = &#39;https://maven.aliyun.com/repository/gradle-plugin/&#39;
+        all { ArtifactRepository repo -&gt;
+            if(repo instanceof MavenArtifactRepository){
+                def url = repo.url.toString()
+                if (url.startsWith(&#39;https://repo1.maven.org/maven2/&#39;)) {
+                    project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_REPOSITORY_URL.&quot;
+                    remove repo
+                }
+                if (url.startsWith(&#39;https://jcenter.bintray.com/&#39;)) {
+                    project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_JCENTER_URL.&quot;
+                    remove repo
+                }
+                if (url.startsWith(&#39;https://dl.google.com/dl/android/maven2/&#39;)) {
+                    project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_GOOGLE_URL.&quot;
+                    remove repo
+                }
+                if (url.startsWith(&#39;https://plugins.gradle.org/m2/&#39;)) {
+                    project.logger.lifecycle &quot;Repository ${repo.url} replaced by $ALIYUN_GRADLE_PLUGIN_URL.&quot;
+                    remove repo
+                }
+            }
+        }
+        maven { url ALIYUN_REPOSITORY_URL }
+        maven { url ALIYUN_JCENTER_URL }
+        maven { url ALIYUN_GOOGLE_URL }
+        maven { url ALIYUN_GRADLE_PLUGIN_URL }
+    }
+}</code></p>
+<p>然后，开始编译，我是遇到了各种各样的错，错误列表如下</p>
+<ul>
+<li><p>Received close_notify during handshake，换了Spring版本解决的，搜索无果</p>
+</li>
+<li><p>ReadTimeOut 应该是网络慢，可以尝试换阿里云</p>
+</li>
+<li><p>exception during working with external system: java.lang.AssertionError</p>
+<pre><code>at org.jetbrains.plugins.gradle.service.project.BaseGradleProjectResolverExtension.createModule(BaseGradleProjectResolverExtension.java:154)
+at org.jetbrains.plugins.gradle.service.project.AbstractProjectResolverExtension.createModule(AbstractProjectResolverExtension.java:86) Gradle版本问题，修改 源码目录下的 gradle/wrapper/gradle-wrapper.properties</code></pre></li>
+</ul>
+<p>  <code>distributionBase=GRADLE_USER_HOME
+  distributionPath=wrapper/dists
+  #distributionUrl=https\://services.gradle.org/distributions/gradle-4.10.3-bin.zip
+  distributionUrl=https\://services.gradle.org/distributions/gradle-5.5.1-all.zip
+  zipStoreBase=GRADLE_USER_HOME
+  zipStorePath=wrapper/dists</code></p>
+<p>idea的相关配置如下：</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh944328ekj312w0u0tdf.jpg" alt="image-20200730171033814"></p>
+<p>如果，运气好的话，你应该就可以编译通过了，接下来建立测试模块</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh945uhk2mj32bs0u0wpl.jpg" alt="image-20200730171218978"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh946l0dyjj32zo0p40z2.jpg" alt="image-20200730171303194"></p>
+<p>Hello world</p>
+<p>如果，你建立了测试模块后，写代码没有提示，加下依赖，在你测试模块的 build.gradle里</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(project(&quot;:spring-context&quot;))</span><br><span class="line">    compile(project(&quot;:spring-beans&quot;))</span><br><span class="line">    testCompile group: &#39;junit&#39;, name: &#39;junit&#39;, version: &#39;4.12&#39;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh947sig5gj31920sogoi.jpg" alt="image-20200730171411800"></p>
 </section>
     <!-- Tags START -->
     
@@ -200,20 +254,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/07/22/%E5%85%B3%E4%BA%8E%E6%B8%B8%E6%88%8F%E4%B8%AD%E7%94%A8%E6%88%B7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%9E%84%E6%83%B3/">
+      <a class="nav-left" href="/2020/07/23/Spring-%E6%98%AF%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96%E7%9A%84/">
         <span class="nav-arrow">← </span>
         
-          关于游戏中用户缓存的设计构想
+          Spring 是如何解决循环依赖的
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/07/30/Spring-%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E9%81%87%E5%88%B0%E7%9A%84%E5%9D%91/">
-        
-          Spring 源码编译遇到的坑
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -267,7 +314,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/07/23/Spring-是如何解决循环依赖的/';
+    var url = 'https://rentu.github.io/2020/07/30/Spring-源码编译遇到的坑/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
