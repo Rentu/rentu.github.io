@@ -148,6 +148,34 @@
   
     <article class="article-card">
       <h2 class="article-head">
+        <a href="/2020/08/04/tomcat-%E5%9C%A8Spring-boot-%E4%B8%AD%E7%9A%84%E5%90%AF%E5%8A%A8%E6%97%B6%E6%9C%BA/">tomcat 在Spring boot 中的启动时机</a>
+      </h2>
+      <p class="article-date">August 4, 2020</p>
+      
+        
+  <a href="/tags#spring boot" >
+    <span class="tag-code">spring boot</span>
+  </a>
+
+  <a href="/tags#spring" >
+    <span class="tag-code">spring</span>
+  </a>
+
+      
+      <div class="article-summary">
+        
+          之前遇到一个问题，我们需要在Spring Boot 启动后做一些配置表刷新的工作，这个刷新比较耗时
+于是，我们实现了  xxRunner implements CommandLineRunner 
+但发现一个问题，配置还未刷新，tomcat就对外服务了
+近来正在阅读源码，在源码里找到了答案
+ ...
+        
+      </div>
+      <a class="more" href="/2020/08/04/tomcat-%E5%9C%A8Spring-boot-%E4%B8%AD%E7%9A%84%E5%90%AF%E5%8A%A8%E6%97%B6%E6%9C%BA/">Read more</a>
+    </article>
+  
+    <article class="article-card">
+      <h2 class="article-head">
         <a href="/2020/08/04/mac-%E4%B8%8B-ssh-%E5%B7%A5%E5%85%B7%E7%9A%84%E9%80%89%E6%8B%A9/">mac 下 ssh 工具的选择</a>
       </h2>
       <p class="article-date">August 4, 2020</p>
@@ -384,33 +412,6 @@ right == n ...
         
       </div>
       <a class="more" href="/2020/05/09/%E8%AF%A6%E8%A7%A3%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91/">Read more</a>
-    </article>
-  
-    <article class="article-card">
-      <h2 class="article-head">
-        <a href="/2020/05/03/%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E7%94%A8docker%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AAphp7%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">如何快速用docker搭建一个php7的开发环境</a>
-      </h2>
-      <p class="article-date">May 3, 2020</p>
-      
-        
-  <a href="/tags#php" >
-    <span class="tag-code">php</span>
-  </a>
-
-  <a href="/tags#docker" >
-    <span class="tag-code">docker</span>
-  </a>
-
-      
-      <div class="article-summary">
-        
-          编写Dockerfile
-FROM centos:7
-RUN wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo \
-&amp;&amp; wget -O /etc/yu ...
-        
-      </div>
-      <a class="more" href="/2020/05/03/%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E7%94%A8docker%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AAphp7%E7%9A%84%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">Read more</a>
     </article>
   
 
