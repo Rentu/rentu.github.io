@@ -10,7 +10,7 @@
   
   <title>
     
-      Spring 源码编译遇到的坑 | Devilu
+      mac 下 ssh 工具的选择 | Devilu
     
   </title>
   <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -145,8 +145,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>Spring 源码编译遇到的坑</h2>
-  <p class="post-date">2020-07-30</p>
+  <h2>mac 下 ssh 工具的选择</h2>
+  <p class="post-date">2020-08-04</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -154,63 +154,35 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><ul>
-<li><p>系统 ： Mac</p>
-</li>
-<li><p>idea版本 ：2019.3</p>
-</li>
-<li><p>gradle ：两个版本，4.10.3 和 5.5.1 </p>
-</li>
-<li><p>Spring 版本：<a href="https://github.com/spring-projects/spring-framework/releases/tag/v5.1.17.RELEASE" target="_blank" rel="noopener">v5.1.17.RELEASE</a> </p>
-</li>
-</ul>
-<p>按照官方给的说明：</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh93nsowgsj31ei0dsac3.jpg" alt="image-20200730165456111"></p>
-<ol>
-<li>下载源码，先不要打开，进入源码目录，执行 ./gradlew :spring-oxm:compileTestJava，这个时候它会自动下载gradle 4.10.3 （好吧，我得承认，前前后后，gradle的版本我下载了n个， Spring 的源码版本我也下载了n个， 只有这个编译通过了）</li>
-<li>导入项目 Import into IntelliJ (File -&gt; New -&gt; Project from Existing Sources -&gt; Navigate to directory -&gt; Select build.gradle)</li>
-<li>当你遇到提示时，可以移除 Spring-aspects 这个模块（我没遇到）</li>
-<li>干吧</li>
-</ol>
-<p>下载依赖这个情况吧，我是全局替换成了阿里云的镜像，所以就没有再改build.gradle, 在你的用户目录下新建一个init.gradle,填入以下内容</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">allprojects&#123;</span><br><span class="line">repositories &#123;</span><br><span class="line">    def ALIYUN_REPOSITORY_URL = <span class="string">'https://maven.aliyun.com/repository/public/'</span></span><br><span class="line">    def ALIYUN_JCENTER_URL = <span class="string">'https://maven.aliyun.com/repository/jcenter/'</span></span><br><span class="line">    def ALIYUN_GOOGLE_URL = <span class="string">'https://maven.aliyun.com/repository/google/'</span></span><br><span class="line">    def ALIYUN_GRADLE_PLUGIN_URL = <span class="string">'https://maven.aliyun.com/repository/gradle-plugin/'</span></span><br><span class="line">    all &#123; ArtifactRepository repo -&gt;</span><br><span class="line">        <span class="keyword">if</span>(repo <span class="keyword">instanceof</span> MavenArtifactRepository)&#123;</span><br><span class="line">            def url = repo.url.toString()</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://repo1.maven.org/maven2/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_REPOSITORY_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://jcenter.bintray.com/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_JCENTER_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://dl.google.com/dl/android/maven2/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_GOOGLE_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (url.startsWith(<span class="string">'https://plugins.gradle.org/m2/'</span>)) &#123;</span><br><span class="line">                project.logger.lifecycle <span class="string">"Repository $&#123;repo.url&#125; replaced by $ALIYUN_GRADLE_PLUGIN_URL."</span></span><br><span class="line">                remove repo</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    maven &#123; url ALIYUN_REPOSITORY_URL &#125;</span><br><span class="line">    maven &#123; url ALIYUN_JCENTER_URL &#125;</span><br><span class="line">    maven &#123; url ALIYUN_GOOGLE_URL &#125;</span><br><span class="line">    maven &#123; url ALIYUN_GRADLE_PLUGIN_URL &#125;</span><br><span class="line">&#125;&#125;</span><br></pre></td></tr></table></figure>
-
-
-<p>然后开始编译，我是遇到了各种各样的错，错误列表如下</p>
+    <section class="markdown-content"><p>win 下一直用xshell，转到mac 下，之前是用iterm2，今天有点闲暇，尝试了一下其他相关软件，最终还是选择了Iterm2</p>
+<p>尝试软件如下：</p>
 <ul>
-<li><p>Received close_notify during handshake，换了Spring版本解决的，搜索无果</p>
-</li>
-<li><p>ReadTimeOut 应该是网络慢，可以尝试换阿里云</p>
-</li>
-<li><p>fatal: not a git repository (or any of the parent directories): .git  搜索无果，建议换 Spring 版本</p>
-</li>
-<li><p>exception during working with external system: java.lang.AssertionError</p>
-<pre><code>at org.jetbrains.plugins.gradle.service.project.BaseGradleProjectResolverExtension.createModule(BaseGradleProjectResolverExtension.java:154)
-at org.jetbrains.plugins.gradle.service.project.AbstractProjectResolverExtension.createModule(AbstractProjectResolverExtension.java:86) Gradle版本问题，修改 源码目录下的 gradle/wrapper/gradle-wrapper.properties</code></pre></li>
+<li>ssh shell 评价太低，下载都懒得下了</li>
+<li>Royalist 流程复杂，而且不支持google的二次验证，重点是我有连接docker服务器的需求，一般 docker exec -it xxx /bin/bash 这种，这软件还给我打开mac默认的终端且不能配置</li>
+<li>electerm 开源的，也不支持二次验证，算了</li>
 </ul>
-<p>  distributionBase=GRADLE_USER_HOME<br>  distributionPath=wrapper/dists<br>  #distributionUrl=https://services.gradle.org/distributions/gradle-4.10.3-bin.zip<br>  distributionUrl=https://services.gradle.org/distributions/gradle-5.5.1-all.zip<br>  zipStoreBase=GRADLE_USER_HOME<br>  zipStorePath=wrapper/dists</p>
-<p>idea的相关配置如下：</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh944328ekj312w0u0tdf.jpg" alt="image-20200730171033814"></p>
-<p>如果，运气好的话，你应该就可以编译通过了，接下来建立测试模块</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh945uhk2mj32bs0u0wpl.jpg" alt="image-20200730171218978"></p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh946l0dyjj32zo0p40z2.jpg" alt="image-20200730171303194"></p>
-<p>Hello world</p>
-<p>如果，你建立了测试模块后，写代码没有提示，加下依赖，在你测试模块的 build.gradle里</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile(project(&quot;:spring-context&quot;))</span><br><span class="line">    compile(project(&quot;:spring-beans&quot;))</span><br><span class="line">    testCompile group: &#39;junit&#39;, name: &#39;junit&#39;, version: &#39;4.12&#39;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为啥最终还是选择了iterm2，最后我发现，可以通过写脚本实现保存密码和二次登陆并且有很强的扩展性，装上zsh，也是非常好看的, 效果图来一发，巴适。</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ghexunulqij31hj0u04qv.jpg" alt="image-20200804180717946"></p>
+<p>脚本就是利用except实现一些简单的交互, except 需要单独安装</p>
+<p><code>brew install expect</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/usr/bin/expect</span></span><br><span class="line"></span><br><span class="line">set timeout 30</span><br><span class="line">spawn ssh name@host</span><br><span class="line">expect &#123;</span><br><span class="line">        "password:"</span><br><span class="line">        &#123;send "密码\n"&#125;</span><br><span class="line">&#125;</span><br><span class="line">interact</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1gh947sig5gj31920sogoi.jpg" alt="image-20200730171411800"></p>
+
+
+<p>嗯，自己动手，丰衣足食。</p>
+<p>​    </p>
 </section>
     <!-- Tags START -->
     
       <div class="tags">
         <span>Tags:</span>
         
-  <a href="/tags#java" >
-    <span class="tag-code">java</span>
+  <a href="/tags#mac" >
+    <span class="tag-code">mac</span>
   </a>
 
-  <a href="/tags#Spring" >
-    <span class="tag-code">Spring</span>
+  <a href="/tags#工具" >
+    <span class="tag-code">工具</span>
   </a>
 
       </div>
@@ -221,20 +193,13 @@ at org.jetbrains.plugins.gradle.service.project.AbstractProjectResolverExtension
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/07/23/Spring-%E6%98%AF%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96%E7%9A%84/">
+      <a class="nav-left" href="/2020/07/30/Spring-%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E9%81%87%E5%88%B0%E7%9A%84%E5%9D%91/">
         <span class="nav-arrow">← </span>
         
-          Spring 是如何解决循环依赖的
+          Spring 源码编译遇到的坑
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/08/04/mac-%E4%B8%8B-ssh-%E5%B7%A5%E5%85%B7%E7%9A%84%E9%80%89%E6%8B%A9/">
-        
-          mac 下 ssh 工具的选择
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -288,7 +253,7 @@ at org.jetbrains.plugins.gradle.service.project.AbstractProjectResolverExtension
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/07/30/Spring-源码编译遇到的坑/';
+    var url = 'https://rentu.github.io/2020/08/04/mac-下-ssh-工具的选择/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
