@@ -10,7 +10,7 @@
   
   <title>
     
-      redis 到底有几个线程 | Devilu
+      redis 的事件调度 | Devilu
     
   </title>
   <link href="//cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -121,8 +121,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>redis 到底有几个线程</h2>
-  <p class="post-date">2020-08-07</p>
+  <h2>redis 的事件调度</h2>
+  <p class="post-date">2020-08-10</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -130,21 +130,25 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>redis5.0 是 4 个，废话少说，上源码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">initServer();</span><br></pre></td></tr></table></figure>
+    <section class="markdown-content"><p>redis 的过期key 的删除策略有三种</p>
+<ol>
+<li>惰性删除</li>
+<li>定时删除</li>
+<li>定期删除</li>
+</ol>
+<p>上面三种的区别自行搜索，这里主要围绕 3 展开</p>
+<p>关于redis 有几个线程，上篇文章有介绍，但还有一个问题，redis 处理 过期key的线程和 接受请求的线程是不是同一个？如果是它们是怎么协调的</p>
+<p>首先，它们是同一个线程，具体的实现是通过利用时间分片的方式解决的</p>
+<p>redis 分为两种事件，时间事件和文件事件，文件事件也就是处理客户端请求，时间事件是指周期性的处理一些后台任务，后台任务不一定就是多线程</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ghlk7qq73wj30rs1uon11.jpg" alt="main_start_event_loop"></p>
+<p>上面这张图大概描述了redis 服务启动的整个流程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建事件循环</span></span><br><span class="line">server.el = aeCreateEventLoop(server.maxclients+CONFIG_FDSET_INCR);</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Ready to spawn our threads. We use the single argument the thread</span></span><br><span class="line"><span class="comment"> * function accepts in order to pass the job ID the thread is</span></span><br><span class="line"><span class="comment"> * responsible of. */</span></span><br><span class="line"><span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; BIO_NUM_OPS; j++) &#123;</span><br><span class="line">    <span class="keyword">void</span> *arg = (<span class="keyword">void</span>*)(<span class="keyword">unsigned</span> <span class="keyword">long</span>) j;</span><br><span class="line">    <span class="keyword">if</span> (pthread_create(&amp;thread,&amp;attr,bioProcessBackgroundJobs,arg) != <span class="number">0</span>) &#123;</span><br><span class="line">        serverLog(LL_WARNING,<span class="string">"Fatal: Can't initialize Background Jobs."</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    bio_threads[j] = thread;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Create the timer callback, this is our way to process many background</span></span><br><span class="line"><span class="comment"> * operations incrementally, like clients timeout, eviction of unaccessed</span></span><br><span class="line"><span class="comment"> * expired keys and so forth. 创建时间事件 */</span></span><br><span class="line"><span class="keyword">if</span> (aeCreateTimeEvent(server.el, <span class="number">1</span>, serverCron, <span class="literal">NULL</span>, <span class="literal">NULL</span>) == AE_ERR) &#123;</span><br><span class="line">    serverPanic(<span class="string">"Can't create event loop timers."</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Background job opcodes */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BIO_CLOSE_FILE    0 <span class="comment">/* Deferred close(2) syscall. */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BIO_AOF_FSYNC     1 <span class="comment">/* Deferred AOF fsync. */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BIO_LAZY_FREE     2 <span class="comment">/* Deferred objects freeing. */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BIO_NUM_OPS       3 <span class="comment">// 线程总数，redis主线程+3个后台线程</span></span></span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Register a readable event for the pipe used to awake the event loop</span></span><br><span class="line"><span class="comment"> * when a blocked client in a module needs attention. 创建文件事件*/</span></span><br><span class="line"><span class="keyword">if</span> (aeCreateFileEvent(server.el, server.module_blocked_pipe[<span class="number">0</span>], AE_READABLE,</span><br><span class="line">    moduleBlockedClientPipeReadable,<span class="literal">NULL</span>) == AE_ERR) &#123;</span><br><span class="line">        serverPanic(</span><br><span class="line">            <span class="string">"Error registering the readable event for the module "</span></span><br><span class="line">            <span class="string">"blocked clients subsystem."</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>看一下</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ghinwe8f42j30rg0c8dhs.jpg" alt="image-20200807232518076"></p>
-<p>把后台线程改成2看看</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ghinwu7y7kj30z80ca3zx.jpg" alt="image-20200807232545128"></p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ghinx2ac7xj30tu0ce0ue.jpg" alt="image-20200807232557289"></p>
-<p>变成3个了</p>
-<p>之所以redis是单线程其实是处理客户端请求的是单线程，但还有后台线程去处理aof，rdb等耗时的任务。</p>
-<p>👌</p>
+<p>简单点讲，利于epoll的超时机制同时监听两个事件，优先处理文件事件，在没有文件事件处理，又到了超时时间便处理时间事件，所以，时间事件是有可能延迟的。</p>
 </section>
     <!-- Tags START -->
     
@@ -155,6 +159,10 @@
     <span class="tag-code">redis</span>
   </a>
 
+  <a href="/tags#源码" >
+    <span class="tag-code">源码</span>
+  </a>
+
       </div>
     
     <!-- Tags END -->
@@ -163,20 +171,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/08/07/redis-%E6%BA%90%E7%A0%81-%E7%BC%96%E8%AF%91/">
+      <a class="nav-left" href="/2020/08/07/redis-%E5%88%B0%E5%BA%95%E6%9C%89%E5%87%A0%E4%B8%AA%E7%BA%BF%E7%A8%8B/">
         <span class="nav-arrow">← </span>
         
-          redis 源码 编译
+          redis 到底有几个线程
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/08/10/redis-%E7%9A%84%E4%BA%8B%E4%BB%B6%E8%B0%83%E5%BA%A6/">
-        
-          redis 的事件调度
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -230,7 +231,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/08/07/redis-到底有几个线程/';
+    var url = 'https://rentu.github.io/2020/08/10/redis-的事件调度/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
