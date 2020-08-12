@@ -124,6 +124,29 @@
   
     <article class="article-card">
       <h2 class="article-head">
+        <a href="/2020/08/12/%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3nginx%E7%9A%84%E6%83%8A%E7%BE%A4%E9%97%AE%E9%A2%98/">如何解决nginx的惊群问题</a>
+      </h2>
+      <p class="article-date">August 12, 2020</p>
+      
+        
+  <a href="/tags#nginx" >
+    <span class="tag-code">nginx</span>
+  </a>
+
+      
+      <div class="article-summary">
+        
+          accept_mutex ，nginx.conf 可配置
+惊群问题其实就是多个work进程同时监听链接，一个链接到来时，唤醒了所有work进程，但只有一个进程拿到了，造成了不必要的资源浪费
+后续补充
+
+        
+      </div>
+      <a class="more" href="/2020/08/12/%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3nginx%E7%9A%84%E6%83%8A%E7%BE%A4%E9%97%AE%E9%A2%98/">Read more</a>
+    </article>
+  
+    <article class="article-card">
+      <h2 class="article-head">
         <a href="/2020/08/10/redis-%E7%9A%84%E4%BA%8B%E4%BB%B6%E8%B0%83%E5%BA%A6/">redis 的事件调度</a>
       </h2>
       <p class="article-date">August 10, 2020</p>
@@ -372,27 +395,6 @@ Spring 版本：v5.1.17.RELEASE
         
       </div>
       <a class="more" href="/2020/07/20/RSA-%E9%9D%9E%E5%AF%B9%E7%A7%B0%E7%AE%97%E6%B3%95-%E5%B7%B2%E7%BB%8F-JWT%E4%B8%AD%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98/">Read more</a>
-    </article>
-  
-    <article class="article-card">
-      <h2 class="article-head">
-        <a href="/2020/07/09/php7-%E5%AE%89%E8%A3%85phalcon-%E6%89%A9%E5%B1%95-docker-centos7/">php7 安装phalcon 扩展 -- docker centos7</a>
-      </h2>
-      <p class="article-date">July 9, 2020</p>
-      
-        
-  <a href="/tags#php" >
-    <span class="tag-code">php</span>
-  </a>
-
-      
-      <div class="article-summary">
-        
-          网上安装 phalcon 扩展的文章较多，但用docker装了centos，在centos安装php扩展的文章比较少，这里记录一下，希望能给一些人带来帮助
-先说下问题，要安装和 php 版本匹配的  扩展，去pecl上看发现要求 版本大于7.2 了，于是，去github下载编译安装，也是可以 ...
-        
-      </div>
-      <a class="more" href="/2020/07/09/php7-%E5%AE%89%E8%A3%85phalcon-%E6%89%A9%E5%B1%95-docker-centos7/">Read more</a>
     </article>
   
 

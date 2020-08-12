@@ -10,7 +10,7 @@
   
   <title>
     
-      redis 的事件调度 | Devilu
+      如何解决nginx的惊群问题 | Devilu
     
   </title>
   <link href="//cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -121,8 +121,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>redis 的事件调度</h2>
-  <p class="post-date">2020-08-10</p>
+  <h2>如何解决nginx的惊群问题</h2>
+  <p class="post-date">2020-08-12</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -130,37 +130,17 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>redis 的过期key 的删除策略有三种</p>
-<ol>
-<li>惰性删除</li>
-<li>定时删除</li>
-<li>定期删除</li>
-</ol>
-<p>上面三种的区别自行搜索，这里主要围绕 3 展开</p>
-<p>关于redis 有几个线程，上篇文章有介绍，但还有一个问题，redis 处理 过期key的线程和 接受请求的线程是不是同一个？如果是它们是怎么协调的</p>
-<p>首先，它们是同一个线程，具体的实现是通过利用时间分片的方式解决的</p>
-<p>redis 分为两种事件，时间事件和文件事件，文件事件也就是处理客户端请求，时间事件是指周期性的处理一些后台任务，后台任务不一定就是多线程</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1ghlk7qq73wj30rs1uon11.jpg" alt="main_start_event_loop"></p>
-<p>上面这张图大概描述了redis 服务启动的整个流程</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建事件循环</span></span><br><span class="line">server.el = aeCreateEventLoop(server.maxclients+CONFIG_FDSET_INCR);</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Create the timer callback, this is our way to process many background</span></span><br><span class="line"><span class="comment"> * operations incrementally, like clients timeout, eviction of unaccessed</span></span><br><span class="line"><span class="comment"> * expired keys and so forth. 创建时间事件 */</span></span><br><span class="line"><span class="keyword">if</span> (aeCreateTimeEvent(server.el, <span class="number">1</span>, serverCron, <span class="literal">NULL</span>, <span class="literal">NULL</span>) == AE_ERR) &#123;</span><br><span class="line">    serverPanic(<span class="string">"Can't create event loop timers."</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Register a readable event for the pipe used to awake the event loop</span></span><br><span class="line"><span class="comment"> * when a blocked client in a module needs attention. 创建文件事件*/</span></span><br><span class="line"><span class="keyword">if</span> (aeCreateFileEvent(server.el, server.module_blocked_pipe[<span class="number">0</span>], AE_READABLE,</span><br><span class="line">    moduleBlockedClientPipeReadable,<span class="literal">NULL</span>) == AE_ERR) &#123;</span><br><span class="line">        serverPanic(</span><br><span class="line">            <span class="string">"Error registering the readable event for the module "</span></span><br><span class="line">            <span class="string">"blocked clients subsystem."</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>简单点讲，利于epoll的超时机制同时监听两个事件，优先处理文件事件，在没有文件事件处理，又到了超时时间便处理时间事件，所以，时间事件是有可能延迟的。</p>
+    <section class="markdown-content"><p>accept_mutex ，nginx.conf 可配置</p>
+<p>惊群问题其实就是多个work进程同时监听链接，一个链接到来时，唤醒了所有work进程，但只有一个进程拿到了，造成了不必要的资源浪费</p>
+<p>后续补充</p>
 </section>
     <!-- Tags START -->
     
       <div class="tags">
         <span>Tags:</span>
         
-  <a href="/tags#redis" >
-    <span class="tag-code">redis</span>
-  </a>
-
-  <a href="/tags#源码" >
-    <span class="tag-code">源码</span>
+  <a href="/tags#nginx" >
+    <span class="tag-code">nginx</span>
   </a>
 
       </div>
@@ -171,20 +151,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/08/07/redis-%E5%88%B0%E5%BA%95%E6%9C%89%E5%87%A0%E4%B8%AA%E7%BA%BF%E7%A8%8B/">
+      <a class="nav-left" href="/2020/08/10/redis-%E7%9A%84%E4%BA%8B%E4%BB%B6%E8%B0%83%E5%BA%A6/">
         <span class="nav-arrow">← </span>
         
-          redis 到底有几个线程
+          redis 的事件调度
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/08/12/%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3nginx%E7%9A%84%E6%83%8A%E7%BE%A4%E9%97%AE%E9%A2%98/">
-        
-          如何解决nginx的惊群问题
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -238,7 +211,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/08/10/redis-的事件调度/';
+    var url = 'https://rentu.github.io/2020/08/12/如何解决nginx的惊群问题/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
