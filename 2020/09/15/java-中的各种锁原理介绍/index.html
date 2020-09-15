@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+  <meta name="description" content="Inc&#39;s blog">
+  <meta name="keyword" content="Inc">
+  
+    <link rel="shortcut icon" href="/css/images/logo.png">
+  
+  <title>
+    
+      java 中的各种锁原理介绍 之 Synchronized | 
+    
+  </title>
+  <link href="//cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="//cdn.bootcdn.net/ajax/libs/nprogress/0.2.0/nprogress.min.css" rel="stylesheet">
+  <link href="/css/images/heightlight.css" rel="stylesheet">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  <script src="//cdn.bootcdn.net/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="//cdn.bootcdn.net/ajax/libs/geopattern/1.2.3/js/geopattern.min.js"></script>
+  <script src="//cdn.bootcdn.net/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+  
+    
+<script src="/js/qrious.js"></script>
+
+  
+  
+  
+
+  
+<meta name="generator" content="Hexo 4.2.0"></head>
+<div class="wechat-share">
+  <img src="/css/images/logo.png" />
+</div>
+
+  <body>
+    <header class="header fixed-header">
+  <div class="header-container">
+    <a class="home-link" href="/">
+      <div class="logo"></div>
+      <span></span>
+    </a>
+    <ul class="right-list">
+      
+        <li class="list-item">
+          
+            <a href="/" class="item-link">Home</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/tags/" class="item-link">Tags</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/archives/" class="item-link">Archives</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/project/" class="item-link">Projects</a>
+          
+        </li>
+      
+        <li class="list-item">
+          
+            <a href="/about/" class="item-link">About</a>
+          
+        </li>
+      
+    </ul>
+    <div class="menu">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </div>
+    <div class="menu-mask">
+      <ul class="menu-list">
+        
+          <li class="menu-item">
+            
+              <a href="/" class="menu-link">Home</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/tags/" class="menu-link">Tags</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/archives/" class="menu-link">Archives</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/project/" class="menu-link">Projects</a>
+            
+          </li>
+        
+          <li class="menu-item">
+            
+              <a href="/about/" class="menu-link">About</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</header>
+
+    <div id="article-banner">
+  <h2>java 中的各种锁原理介绍 之 Synchronized</h2>
+  <p class="post-date">2020-09-15</p>
+  <div class="arrow-down">
+    <a href="javascript:;"></a>
+  </div>
+</div>
+<main class="app-body flex-box">
+  <!-- Article START -->
+  <article class="post-article">
+    <section class="markdown-content"><h3 id="Synchronized"><a href="#Synchronized" class="headerlink" title="Synchronized"></a>Synchronized</h3><blockquote>
+<p>轻量级锁基于java自身实现，重量级锁依赖系统底层互斥量实现</p>
+</blockquote>
+<p>太长不看，这里有总结, 整个流程在文章末尾有流程图</p>
+<p>Synchronized 中有几种锁，听起来感觉这话有点怪，Synchronized本身不就是一种锁吗？是的，但是JVM内置锁在1.5之后版本做了重大的优化，存在一个锁的膨胀升级过程，下面会一一介绍</p>
+<ol>
+<li>偏向锁，基于Mark Word实现 ，Mark Word 底下有介绍</li>
+<li>轻量级锁，所谓轻量级锁是基于对象头Mark Word实现的，这里升级为轻量锁其实就是Mark Word 的结构变更以及自旋，如果获取失败会进行自旋，自旋就是个while循环，不需要放弃cpu的使用权和发生线程切换等操作，所以轻量</li>
+<li>重量级锁  基于 系统底层的互斥量实现，需要发生陷入内核态，产生线程切换等成本</li>
+</ol>
+<p>java 一个对象的组成</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girei1fudpj31400plaba.jpg" alt="img"></p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girgy8050xj30wu0e6jtx.jpg" alt="image-20200915173517945"></p>
+<ul>
+<li>对象头存储的就是一些对象自身的数据，指向哪个类，以此来判断一个对象是哪个类的实例，Mark Word等</li>
+<li>实例就是用户new 的那的个东西，储存着对象的实际数据，也就是我们在程序中定义的各种类型的字段内容。</li>
+<li>对象填充因为JVM要求java的对象占的内存大小应该是8bit的倍数，所以后面有几个字节用于把对象的大小补齐至8bit的倍数，没有特别的功能。</li>
+</ul>
+<p>说说Monitor对象，<strong>在对象的对象头中，当锁的状态为重量级锁的时候，它的指针即指向<code>monitor</code>对象</strong></p>
+<p>MonitorEnter指令：插入在同步代码块的开始位置，当代码执行到该指令时，将会尝试获取该对象Monitor的所有权，即尝试获得该对象的锁；<br>MonitorExit指令：插入在方法结束处和异常处，JVM保证每个MonitorEnter必须有对应的MonitorExit；</p>
+<p>​               </p>
+<p><strong>monitorenter</strong>：</p>
+<ol>
+<li>如果<code>monitor</code>的进入数为0，则线程进入到<code>monitor</code>，然后将进入数设置为<code>1</code>，该线程称为<code>monitor</code>的所有者。</li>
+<li>如果是线程已经拥有此<code>monitor</code>(即<code>monitor</code>进入数不为0)，然后该线程又重新进入<code>monitor</code>，则将<code>monitor</code>的进入数<code>+1</code>，这个即为<strong>锁的重入</strong>。</li>
+<li>如果其他线程已经占用了<code>monitor</code>，则该线程进入到<strong>阻塞状态，直到<code>monitor</code>的进入数为0，该线程再去重新尝试获取<code>monitor</code>的所有权</strong>。</li>
+</ol>
+<p><strong>monitorexit</strong>：执行该指令的线程必须是<code>monitor</code>的<strong>所有者</strong>，指令执行时，<code>monitor</code>进入数<code>-1</code>，如果<code>-1</code>后进入数为<code>0</code>，那么线程退出<code>monitor</code>，不再是这个<code>monitor</code>的所有者。这个时候其它阻塞的线程可以尝试获取<code>monitor</code>的所有权。</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girgu5szsfj30fx06edgd.jpg" alt="image-20200915173123709"></p>
+<blockquote>
+<p>锁的膨胀升级过程：</p>
+</blockquote>
+<p>锁的状态总共有四种，无锁状态、偏向锁、轻量级锁和重量级锁。随着锁的竞争，锁可以从偏向锁升级到轻量级锁，再升级的重量级锁，但是锁的升级是单向的，也就是说只能从低到高升级，不会出现锁的降级。</p>
+<p>对下图的理解：</p>
+<p>当只有一个线程执行的时候，获取偏向锁，出现锁竞争时，撤销偏向锁，升级为轻量锁，获取轻量锁失败时进行自旋，自旋失败升级为重量锁</p>
+<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girfmnxm1ij31s70u0b29.jpg" alt="img"></p>
+</section>
+    <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#java" >
+    <span class="tag-code">java</span>
+  </a>
+
+      </div>
+    
+    <!-- Tags END -->
+    <!-- NAV START -->
+    
+  <div class="nav-container">
+    <!-- reverse left and right to put prev and next in a more logic postition -->
+    
+      <a class="nav-left" href="/2020/08/31/%E6%9C%80%E7%AE%80%E5%8D%95%E6%98%93%E6%87%82%E7%9A%84Spring-boot-sharding-jdbc-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E6%95%99%E7%A8%8B/">
+        <span class="nav-arrow">← </span>
+        
+          最简单易懂的Spring boot，mybatis，sharding jdbc 分库分表教程
+        
+      </a>
+    
+    
+  </div>
+
+    <!-- NAV END -->
+    <!-- 打赏 START -->
+    
+      <div class="money-like">
+        <div class="reward-btn">
+          赏
+          <span class="money-code">
+            <span class="alipay-code">
+              <div class="code-image"></div>
+              <b>使用支付宝打赏</b>
+            </span>
+            <span class="wechat-code">
+              <div class="code-image"></div>
+              <b>使用微信打赏</b>
+            </span>
+          </span>
+        </div>
+        <p class="notice">若你觉得我的文章对你有帮助，欢迎点击上方按钮对我打赏</p>
+      </div>
+    
+    <!-- 打赏 END -->
+    <!-- 二维码 START -->
+    
+      <div class="qrcode">
+        <canvas id="share-qrcode"></canvas>
+        <p class="notice">扫描二维码，分享此文章</p>
+      </div>
+    
+    <!-- 二维码 END -->
+    
+      <!-- No Comment -->
+    
+  </article>
+  <!-- Article END -->
+  <!-- Catalog START -->
+  
+    <aside class="catalog-container">
+  <div class="toc-main">
+    <strong class="toc-title">Catalog</strong>
+    
+      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#Synchronized"><span class="toc-nav-text">Synchronized</span></a></li></ol>
+    
+  </div>
+</aside>
+  
+  <!-- Catalog END -->
+</main>
+
+<script>
+  (function () {
+    var url = 'https://rentu.github.io/2020/09/15/java-中的各种锁原理介绍/';
+    var banner = ''
+    if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
+      $('#article-banner').css({
+        'background-image': 'url(' + banner + ')'
+      })
+    } else {
+      $('#article-banner').geopattern(url)
+    }
+    $('.header').removeClass('fixed-header')
+
+    // error image
+    $(".markdown-content img").on('error', function() {
+      $(this).attr('src', 'http://file.muyutech.com/error-img.png')
+      $(this).css({
+        'cursor': 'default'
+      })
+    })
+
+    // zoom image
+    $(".markdown-content img").on('click', function() {
+      var src = $(this).attr('src')
+      if (src !== 'http://file.muyutech.com/error-img.png') {
+        var imageW = $(this).width()
+        var imageH = $(this).height()
+
+        var zoom = ($(window).width() * 0.95 / imageW).toFixed(2)
+        zoom = zoom < 1 ? 1 : zoom
+        zoom = zoom > 2 ? 2 : zoom
+        var transY = (($(window).height() - imageH) / 2).toFixed(2)
+
+        $('body').append('<div class="image-view-wrap"><div class="image-view-inner"><img src="'+ src +'" /></div></div>')
+        $('.image-view-wrap').addClass('wrap-active')
+        $('.image-view-wrap img').css({
+          'width': `${imageW}`,
+          'transform': `translate3d(0, ${transY}px, 0) scale3d(${zoom}, ${zoom}, 1)`
+        })
+        $('html').css('overflow', 'hidden')
+
+        $('.image-view-wrap').on('click', function() {
+          $(this).remove()
+          $('html').attr('style', '')
+        })
+      }
+    })
+  })();
+</script>
+
+
+  <script>
+    var qr = new QRious({
+      element: document.getElementById('share-qrcode'),
+      value: document.location.href
+    });
+  </script>
+
+
+
+
+
+
+    <div class="scroll-top">
+  <span class="arrow-icon"></span>
+</div>
+    <footer class="app-footer">
+  <p class="copyright">
+    &copy; 2020 | Proudly powered by <a href="https://hexo.io" target="_blank">Hexo</a>
+    <br>
+    Theme by <a href="https://github.com/yanm1ng" target="_blank" rel="noopener">yanm1ng</a>
+  </p>
+</footer>
+
+<script>
+  function async(u, c) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+</script>
+<script>
+  async("//cdn.bootcdn.net/ajax/libs/fastclick/1.0.6/fastclick.min.js", function(){
+    FastClick.attach(document.body);
+  })
+</script>
+
+<script>
+  var hasLine = 'true';
+  async("//cdn.bootcdn.net/ajax/libs/highlight.js/10.1.2/highlight.min.js", function(){
+    $('figure pre').each(function(i, block) {
+      var figure = $(this).parents('figure');
+      if (hasLine === 'false') {
+        figure.find('.gutter').hide();
+      }
+      var lang = figure.attr('class').split(' ')[1] || 'code';
+      var codeHtml = $(this).html();
+      var codeTag = document.createElement('code');
+      codeTag.className = lang;
+      codeTag.innerHTML = codeHtml;
+      $(this).attr('class', '').empty().html(codeTag);
+      figure.attr('data-lang', lang.toUpperCase());
+      hljs.highlightBlock(block);
+    });
+  })
+</script>
+<!-- Baidu Tongji -->
+
+
+<script src="/js/script.js"></script>
+
+  </body>
+</html>
