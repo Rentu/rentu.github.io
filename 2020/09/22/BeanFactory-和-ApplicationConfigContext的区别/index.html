@@ -10,7 +10,7 @@
   
   <title>
     
-      Mac 安装 hsdis 查看 汇编指令 | 
+      BeanFactory 和 ApplicationContext的区别 | 
     
   </title>
   <link href="//cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -121,8 +121,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>Mac 安装 hsdis 查看 汇编指令</h2>
-  <p class="post-date">2020-09-21</p>
+  <h2>BeanFactory 和 ApplicationContext的区别</h2>
+  <p class="post-date">2020-09-22</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -130,25 +130,68 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><p>先安装下hg</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install mercurial</span><br></pre></td></tr></table></figure>
+    <section class="markdown-content"><p>BeanFactory 是顶级接口</p>
+<p>ApplicationContext 继承于BeanFactory , 都具有生产Bean的能力，但BeanFactory不具备包扫描的能力</p>
+<p>ApplicationContext 具有更多的功能，事件发布等，服务非常好</p>
+<p>BeanFactory 就是一个无情的生产机器，没有其他服务，只能通过下面的方式去注册Bean定义，生产Bean</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DefaultListableBeanFactory defaultListableBeanFactory = <span class="keyword">new</span> DefaultListableBeanFactory();</span><br><span class="line">defaultListableBeanFactory.registerBeanDefinition();</span><br><span class="line">defaultListableBeanFactory.getBean();</span><br></pre></td></tr></table></figure>
 
-
-
-<p>官网地址： <strong><a href="https://www.chrisnewland.com/updated-instructions-for-building-hsdis-on-osx-417" target="_blank" rel="noopener">https://www.chrisnewland.com/updated-instructions-for-building-hsdis-on-osx-417</a></strong></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">hg clone http:&#x2F;&#x2F;hg.openjdk.java.net&#x2F;jdk8u&#x2F;jdk8u</span><br><span class="line"></span><br><span class="line"># 官网上少了这一步</span><br><span class="line">sh get_source.sh</span><br><span class="line"></span><br><span class="line">cd jdk8u&#x2F;hotspot&#x2F;src&#x2F;share&#x2F;tools&#x2F;hsdis&#x2F;</span><br><span class="line"></span><br><span class="line">wget http:&#x2F;&#x2F;ftp.heanet.ie&#x2F;mirrors&#x2F;ftp.gnu.org&#x2F;gnu&#x2F;binutils&#x2F;binutils-2.30.tar.gz</span><br><span class="line"></span><br><span class="line">tar -xzf binutils-2.30.tar.gz</span><br><span class="line"></span><br><span class="line">make BINUTILS&#x3D;binutils-2.30 ARCH&#x3D;amd64</span><br><span class="line"></span><br><span class="line">#java8</span><br><span class="line">sudo cp build&#x2F;macosx-amd64&#x2F;hsdis-amd64.dylib   &#x2F;Library&#x2F;Java&#x2F;JavaVirtualMachines&#x2F;jdk1.8.0_181.jdk&#x2F;Contents&#x2F;Home&#x2F;jre&#x2F;lib&#x2F;server&#x2F;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>Vm参数</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UnlockDiagnosticVMOptions</span><br><span class="line">-XX:+PrintAssembly</span><br><span class="line">-XX:CompileCommand&#x3D;print,*Test.main</span><br><span class="line">-XX:+LogCompilation</span><br><span class="line">-XX:LogFile&#x3D;jit.log</span><br></pre></td></tr></table></figure>
-
-
-
-<p>运行程序就可以看到汇编输出了：</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1giz7lgolilj31k80smn2e.jpg" alt="image-20200922101601840"></p>
+<p>这也是为什么说，BeanFactory   是getBean的时候才创建，而ApplicationContext是在容器启动的时候就已经创建好了Singletonl的Bean</p>
+<p>下面的表格是一个不错的总结：</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><code>BeanFactory</code></th>
+<th><code>ApplicationContext</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bean Bean实例化/装配</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>集成的生命周期管理</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>自动注册 <code>BeanPostProcessor</code></td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>自动注册 <code>BeanFactoryPostProcessor</code></td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>便利的 <code>MessageSource</code> 访问 (国际化)</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>内置<code>ApplicationEvent</code> 发布机制</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
 </section>
     <!-- Tags START -->
+    
+      <div class="tags">
+        <span>Tags:</span>
+        
+  <a href="/tags#Spring" >
+    <span class="tag-code">Spring</span>
+  </a>
+
+  <a href="/tags#源码" >
+    <span class="tag-code">源码</span>
+  </a>
+
+      </div>
     
     <!-- Tags END -->
     <!-- NAV START -->
@@ -156,20 +199,13 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/09/21/%E6%AF%8F%E6%97%A5%E4%B8%80%E7%9C%81%E5%90%BE%E8%BA%AB%EF%BC%8C%E7%A0%81%E7%9C%9F%E6%87%82%E5%90%A6%EF%BC%9F/">
+      <a class="nav-left" href="/2020/09/21/Mac-%E5%AE%89%E8%A3%85-hsdis-%E6%9F%A5%E7%9C%8B-%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/">
         <span class="nav-arrow">← </span>
         
-          每日一省吾身，码真懂乎？
+          Mac 安装 hsdis 查看 汇编指令
         
       </a>
     
-    
-      <a class="nav-right" href="/2020/09/22/BeanFactory-%E5%92%8C-ApplicationConfigContext%E7%9A%84%E5%8C%BA%E5%88%AB/">
-        
-          BeanFactory 和 ApplicationContext的区别
-        
-        <span class="nav-arrow"> →</span>
-      </a>
     
   </div>
 
@@ -223,7 +259,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/09/21/Mac-安装-hsdis-查看-汇编指令/';
+    var url = 'https://rentu.github.io/2020/09/22/BeanFactory-和-ApplicationConfigContext的区别/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
