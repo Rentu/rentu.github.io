@@ -10,7 +10,7 @@
   
   <title>
     
-      java 中的各种锁原理介绍 之 Synchronized | 
+      各种选主之 zookeeper | 
     
   </title>
   <link href="//cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -121,8 +121,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>java 中的各种锁原理介绍 之 Synchronized</h2>
-  <p class="post-date">2020-09-15</p>
+  <h2>各种选主之 zookeeper</h2>
+  <p class="post-date">2020-09-16</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -130,50 +130,26 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><h3 id="Synchronized"><a href="#Synchronized" class="headerlink" title="Synchronized"></a>Synchronized</h3><blockquote>
-<p>轻量级锁基于java自身实现，重量级锁依赖系统底层互斥量实现</p>
-</blockquote>
-<p>太长不看，这里有总结, 整个流程在文章末尾有流程图</p>
-<p>Synchronized 中有几种锁，听起来感觉这话有点怪，Synchronized本身不就是一种锁吗？是的，但是JVM内置锁在1.5之后版本做了重大的优化，存在一个锁的膨胀升级过程，下面会一一介绍</p>
-<ol>
-<li>偏向锁，基于Mark Word实现 ，Mark Word 底下有介绍</li>
-<li>轻量级锁，所谓轻量级锁是基于对象头Mark Word实现的，这里升级为轻量锁其实就是Mark Word 的结构变更以及自旋，如果获取失败会进行自旋，自旋就是个while循环，不需要放弃cpu的使用权和发生线程切换等操作，所以轻量</li>
-<li>重量级锁  基于 系统底层的互斥量实现，需要发生陷入内核态，产生线程切换等成本</li>
-</ol>
-<p>java 一个对象的组成</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girei1fudpj31400plaba.jpg" alt="img"></p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girgy8050xj30wu0e6jtx.jpg" alt="image-20200915173517945"></p>
-<ul>
-<li>对象头存储的就是一些对象自身的数据，指向哪个类，以此来判断一个对象是哪个类的实例，Mark Word等</li>
-<li>实例就是用户new 的那的个东西，储存着对象的实际数据，也就是我们在程序中定义的各种类型的字段内容。</li>
-<li>对象填充因为JVM要求java的对象占的内存大小应该是8bit的倍数，所以后面有几个字节用于把对象的大小补齐至8bit的倍数，没有特别的功能。</li>
-</ul>
-<p>说说Monitor对象，<strong>在对象的对象头中，当锁的状态为重量级锁的时候，它的指针即指向<code>monitor</code>对象</strong></p>
-<p>MonitorEnter指令：插入在同步代码块的开始位置，当代码执行到该指令时，将会尝试获取该对象Monitor的所有权，即尝试获得该对象的锁；<br>MonitorExit指令：插入在方法结束处和异常处，JVM保证每个MonitorEnter必须有对应的MonitorExit；</p>
-<p>​               </p>
-<p><strong>monitorenter</strong>：</p>
-<ol>
-<li>如果<code>monitor</code>的进入数为0，则线程进入到<code>monitor</code>，然后将进入数设置为<code>1</code>，该线程称为<code>monitor</code>的所有者。</li>
-<li>如果是线程已经拥有此<code>monitor</code>(即<code>monitor</code>进入数不为0)，然后该线程又重新进入<code>monitor</code>，则将<code>monitor</code>的进入数<code>+1</code>，这个即为<strong>锁的重入</strong>。</li>
-<li>如果其他线程已经占用了<code>monitor</code>，则该线程进入到<strong>阻塞状态，直到<code>monitor</code>的进入数为0，该线程再去重新尝试获取<code>monitor</code>的所有权</strong>。</li>
-</ol>
-<p><strong>monitorexit</strong>：执行该指令的线程必须是<code>monitor</code>的<strong>所有者</strong>，指令执行时，<code>monitor</code>进入数<code>-1</code>，如果<code>-1</code>后进入数为<code>0</code>，那么线程退出<code>monitor</code>，不再是这个<code>monitor</code>的所有者。这个时候其它阻塞的线程可以尝试获取<code>monitor</code>的所有权。</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girgu5szsfj30fx06edgd.jpg" alt="image-20200915173123709"></p>
-<blockquote>
-<p>锁的膨胀升级过程：</p>
-</blockquote>
-<p>锁的状态总共有四种，无锁状态、偏向锁、轻量级锁和重量级锁。随着锁的竞争，锁可以从偏向锁升级到轻量级锁，再升级的重量级锁，但是锁的升级是单向的，也就是说只能从低到高升级，不会出现锁的降级。</p>
-<p>对下图的理解：</p>
-<p>当只有一个线程执行的时候，获取偏向锁，出现锁竞争时，撤销偏向锁，升级为轻量锁，获取轻量锁失败时进行自旋，自旋失败升级为重量锁</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girfmnxm1ij31s70u0b29.jpg" alt="img"></p>
+    <section class="markdown-content"><p>zab，消息广播，2阶段提交，leader收请求，向f发起提案，f写入自己的事务队列，想l发送ack，收到半数ack以上，发送commit</p>
+<p>follow可处理读请求，可接收写请求转发给leader</p>
+<p>崩溃恢复，重新选举</p>
+<p>在 ZAB 协议的事务编号 Zxid 设计中，Zxid 是一个 64 位的数字，其中低 32 位是一个简单的单调递增的计数器，针对客户端每一个事务请求，计数器加 1；而高 32 位则代表 Leader 周期 epoch 的编号，每个当选产生一个新的 Leader 服务器，就会从这个 Leader 服务器上取出其本地日志中最大事务的ZXID，并从中读取 epoch 值，然后加 1，以此作为新的 epoch，并将低 32 位从 0 开始计数。epoch：可以理解为当前集群所处的年代或者周期，每个 leader 就像皇帝，都有自己的年号，所以每次改朝换代，leader 变更之后，都会在前一个年代的基础上加 1。这样就算旧的 leader 崩溃恢复之后，也没有人听他的了，因为 follower 只听从当前年代的 leader 的命令。</p>
+<p>成为 leader 的条件，也就是说选择周期优先&gt;事务编号&gt;server_id<br>选epoch最大的<br>epoch相等，选 zxid 最大的<br>epoch和zxid都相等，选择server id最大的（就是我们配置zoo.cfg中的myid）</p>
+<p>zk cp</p>
+<p>kafka的选举依赖于zk</p>
+<p>Controller选举机制</p>
+<p>在kafka集群启动的时候，会自动选举一台broker作为controller来管理整个集群，选举的过程是集群中每个broker都会 尝试在zookeeper上创建一个 /controller 临时节点，zookeeper会保证有且仅有一个broker能创建成功，这个broker 就会成为集群的总控器controller。 当这个controller角色的broker宕机了，此时zookeeper临时节点会消失，集群里其他broker会一直监听这个临时节 点，发现临时节点消失了，就竞争再次创建临时节点，就是我们上面说的选举机制，zookeeper又会保证有一个broker 成为新的controller。</p>
+<p>Partition副本选举Leader机制</p>
+<p>controller感知到分区leader所在的broker挂了(controller监听了很多zk节点可以感知到broker存活)，controller会从每 个parititon的 replicas 副本列表中取出第一个broker作为leader，当然这个broker需要也同时在ISR列表里。</p>
+<p>同一个分区内的消息只能被同一个组中的一个消费者消费，当消费者数量多于分区数量时，多于的消费者空闲（不能消费数据）。</p>
 </section>
     <!-- Tags START -->
     
       <div class="tags">
         <span>Tags:</span>
         
-  <a href="/tags#java" >
-    <span class="tag-code">java</span>
+  <a href="/tags#zookeeper" >
+    <span class="tag-code">zookeeper</span>
   </a>
 
       </div>
@@ -184,17 +160,17 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/08/31/%E6%9C%80%E7%AE%80%E5%8D%95%E6%98%93%E6%87%82%E7%9A%84Spring-boot-sharding-jdbc-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E6%95%99%E7%A8%8B/">
+      <a class="nav-left" href="/2020/09/15/java-%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E9%94%81%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D/">
         <span class="nav-arrow">← </span>
         
-          最简单易懂的Spring boot，mybatis，sharding jdbc 分库分表教程
+          java 中的各种锁原理介绍 之 Synchronized
         
       </a>
     
     
-      <a class="nav-right" href="/2020/09/16/%E5%90%84%E7%A7%8D%E9%80%89%E4%B8%BB%E4%B9%8B-zookeeper/">
+      <a class="nav-right" href="/2020/09/21/%E5%86%99%E4%B8%80%E4%B8%AA%E5%8D%95%E4%BE%8B%EF%BC%8C%E6%97%A0%E8%AE%BA%E4%BB%80%E4%B9%88%E6%83%85%E5%86%B5%E4%B8%8B%E9%83%BD%E5%8F%AF%E8%83%BD%E4%BF%9D%E8%AF%81%E5%8F%AA%E6%9C%89%E4%B8%80%E4%B8%AA/">
         
-          各种选主之 zookeeper
+          写一个单例，无论什么情况下都可能保证只有一个
         
         <span class="nav-arrow"> →</span>
       </a>
@@ -241,7 +217,7 @@
   <div class="toc-main">
     <strong class="toc-title">Catalog</strong>
     
-      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#Synchronized"><span class="toc-nav-text">Synchronized</span></a></li></ol>
+      <ol class="nav">none</ol>
     
   </div>
 </aside>
@@ -251,7 +227,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/09/15/java-中的各种锁原理介绍/';
+    var url = 'https://rentu.github.io/2020/09/16/各种选主之-zookeeper/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({

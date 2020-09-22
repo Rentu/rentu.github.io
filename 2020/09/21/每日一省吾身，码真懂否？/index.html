@@ -10,7 +10,7 @@
   
   <title>
     
-      java 中的各种锁原理介绍 之 Synchronized | 
+      每日一省吾身，码真懂乎？ | 
     
   </title>
   <link href="//cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -121,8 +121,8 @@
 </header>
 
     <div id="article-banner">
-  <h2>java 中的各种锁原理介绍 之 Synchronized</h2>
-  <p class="post-date">2020-09-15</p>
+  <h2>每日一省吾身，码真懂乎？</h2>
+  <p class="post-date">2020-09-21</p>
   <div class="arrow-down">
     <a href="javascript:;"></a>
   </div>
@@ -130,53 +130,13 @@
 <main class="app-body flex-box">
   <!-- Article START -->
   <article class="post-article">
-    <section class="markdown-content"><h3 id="Synchronized"><a href="#Synchronized" class="headerlink" title="Synchronized"></a>Synchronized</h3><blockquote>
-<p>轻量级锁基于java自身实现，重量级锁依赖系统底层互斥量实现</p>
+    <section class="markdown-content"><blockquote>
+<p> 学而不思则罔，思而不学则殆</p>
 </blockquote>
-<p>太长不看，这里有总结, 整个流程在文章末尾有流程图</p>
-<p>Synchronized 中有几种锁，听起来感觉这话有点怪，Synchronized本身不就是一种锁吗？是的，但是JVM内置锁在1.5之后版本做了重大的优化，存在一个锁的膨胀升级过程，下面会一一介绍</p>
-<ol>
-<li>偏向锁，基于Mark Word实现 ，Mark Word 底下有介绍</li>
-<li>轻量级锁，所谓轻量级锁是基于对象头Mark Word实现的，这里升级为轻量锁其实就是Mark Word 的结构变更以及自旋，如果获取失败会进行自旋，自旋就是个while循环，不需要放弃cpu的使用权和发生线程切换等操作，所以轻量</li>
-<li>重量级锁  基于 系统底层的互斥量实现，需要发生陷入内核态，产生线程切换等成本</li>
-</ol>
-<p>java 一个对象的组成</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girei1fudpj31400plaba.jpg" alt="img"></p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girgy8050xj30wu0e6jtx.jpg" alt="image-20200915173517945"></p>
-<ul>
-<li>对象头存储的就是一些对象自身的数据，指向哪个类，以此来判断一个对象是哪个类的实例，Mark Word等</li>
-<li>实例就是用户new 的那的个东西，储存着对象的实际数据，也就是我们在程序中定义的各种类型的字段内容。</li>
-<li>对象填充因为JVM要求java的对象占的内存大小应该是8bit的倍数，所以后面有几个字节用于把对象的大小补齐至8bit的倍数，没有特别的功能。</li>
-</ul>
-<p>说说Monitor对象，<strong>在对象的对象头中，当锁的状态为重量级锁的时候，它的指针即指向<code>monitor</code>对象</strong></p>
-<p>MonitorEnter指令：插入在同步代码块的开始位置，当代码执行到该指令时，将会尝试获取该对象Monitor的所有权，即尝试获得该对象的锁；<br>MonitorExit指令：插入在方法结束处和异常处，JVM保证每个MonitorEnter必须有对应的MonitorExit；</p>
-<p>​               </p>
-<p><strong>monitorenter</strong>：</p>
-<ol>
-<li>如果<code>monitor</code>的进入数为0，则线程进入到<code>monitor</code>，然后将进入数设置为<code>1</code>，该线程称为<code>monitor</code>的所有者。</li>
-<li>如果是线程已经拥有此<code>monitor</code>(即<code>monitor</code>进入数不为0)，然后该线程又重新进入<code>monitor</code>，则将<code>monitor</code>的进入数<code>+1</code>，这个即为<strong>锁的重入</strong>。</li>
-<li>如果其他线程已经占用了<code>monitor</code>，则该线程进入到<strong>阻塞状态，直到<code>monitor</code>的进入数为0，该线程再去重新尝试获取<code>monitor</code>的所有权</strong>。</li>
-</ol>
-<p><strong>monitorexit</strong>：执行该指令的线程必须是<code>monitor</code>的<strong>所有者</strong>，指令执行时，<code>monitor</code>进入数<code>-1</code>，如果<code>-1</code>后进入数为<code>0</code>，那么线程退出<code>monitor</code>，不再是这个<code>monitor</code>的所有者。这个时候其它阻塞的线程可以尝试获取<code>monitor</code>的所有权。</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girgu5szsfj30fx06edgd.jpg" alt="image-20200915173123709"></p>
-<blockquote>
-<p>锁的膨胀升级过程：</p>
-</blockquote>
-<p>锁的状态总共有四种，无锁状态、偏向锁、轻量级锁和重量级锁。随着锁的竞争，锁可以从偏向锁升级到轻量级锁，再升级的重量级锁，但是锁的升级是单向的，也就是说只能从低到高升级，不会出现锁的降级。</p>
-<p>对下图的理解：</p>
-<p>当只有一个线程执行的时候，获取偏向锁，出现锁竞争时，撤销偏向锁，升级为轻量锁，获取轻量锁失败时进行自旋，自旋失败升级为重量锁</p>
-<p><img src="https://tva1.sinaimg.cn/large/007S8ZIlgy1girfmnxm1ij31s70u0b29.jpg" alt="img"></p>
+<p>这句话为<a href="https://baike.baidu.com/item/孔子/1584" target="_blank" rel="noopener">孔子</a>所<a href="https://baike.baidu.com/item/提倡/1656932" target="_blank" rel="noopener">提倡</a>的一种读书及学习方法。指的是一味读书而不<a href="https://baike.baidu.com/item/思考/3097" target="_blank" rel="noopener">思考</a>，就会因为不能深刻理解书本的意义而不能合理有效利用书本的知识，甚至会陷入迷茫。而如果一味<a href="https://baike.baidu.com/item/空想/229334" target="_blank" rel="noopener">空想</a>而不去进行实实在在地学习和钻研，则终究是沙上建塔，一无所得。告诫我们只有把学习和思考结合起来，才能学到切实有用的知识，否则就会<a href="https://baike.baidu.com/item/收效甚微" target="_blank" rel="noopener">收效甚微</a>。</p>
+<p><strong>古人诚不欺我</strong></p>
 </section>
     <!-- Tags START -->
-    
-      <div class="tags">
-        <span>Tags:</span>
-        
-  <a href="/tags#java" >
-    <span class="tag-code">java</span>
-  </a>
-
-      </div>
     
     <!-- Tags END -->
     <!-- NAV START -->
@@ -184,17 +144,17 @@
   <div class="nav-container">
     <!-- reverse left and right to put prev and next in a more logic postition -->
     
-      <a class="nav-left" href="/2020/08/31/%E6%9C%80%E7%AE%80%E5%8D%95%E6%98%93%E6%87%82%E7%9A%84Spring-boot-sharding-jdbc-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E6%95%99%E7%A8%8B/">
+      <a class="nav-left" href="/2020/09/21/%E5%86%99%E4%B8%80%E4%B8%AA%E5%8D%95%E4%BE%8B%EF%BC%8C%E6%97%A0%E8%AE%BA%E4%BB%80%E4%B9%88%E6%83%85%E5%86%B5%E4%B8%8B%E9%83%BD%E5%8F%AF%E8%83%BD%E4%BF%9D%E8%AF%81%E5%8F%AA%E6%9C%89%E4%B8%80%E4%B8%AA/">
         <span class="nav-arrow">← </span>
         
-          最简单易懂的Spring boot，mybatis，sharding jdbc 分库分表教程
+          写一个单例，无论什么情况下都可能保证只有一个
         
       </a>
     
     
-      <a class="nav-right" href="/2020/09/16/%E5%90%84%E7%A7%8D%E9%80%89%E4%B8%BB%E4%B9%8B-zookeeper/">
+      <a class="nav-right" href="/2020/09/21/Mac-%E5%AE%89%E8%A3%85-hsdis-%E6%9F%A5%E7%9C%8B-%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/">
         
-          各种选主之 zookeeper
+          Mac 安装 hsdis 查看 汇编指令
         
         <span class="nav-arrow"> →</span>
       </a>
@@ -241,7 +201,7 @@
   <div class="toc-main">
     <strong class="toc-title">Catalog</strong>
     
-      <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#Synchronized"><span class="toc-nav-text">Synchronized</span></a></li></ol>
+      <ol class="nav">none</ol>
     
   </div>
 </aside>
@@ -251,7 +211,7 @@
 
 <script>
   (function () {
-    var url = 'https://rentu.github.io/2020/09/15/java-中的各种锁原理介绍/';
+    var url = 'https://rentu.github.io/2020/09/21/每日一省吾身，码真懂否？/';
     var banner = ''
     if (banner !== '' && banner !== 'undefined' && banner !== 'null') {
       $('#article-banner').css({
