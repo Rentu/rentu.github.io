@@ -124,6 +124,26 @@
   
     <article class="article-card">
       <h2 class="article-head">
+        <a href="/2020/07/22/%E5%85%B3%E4%BA%8E%E6%B8%B8%E6%88%8F%E4%B8%AD%E7%94%A8%E6%88%B7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%9E%84%E6%83%B3/">关于游戏中用户缓存的设计构想</a>
+      </h2>
+      <p class="article-date">July 22, 2020</p>
+      
+        
+  <a href="/tags#解决方案" >
+    <span class="tag-code">解决方案</span>
+  </a>
+
+      
+      <div class="article-summary">
+        
+          游戏中通常会有一个游戏大厅，在进入游戏大厅的时候会获取很多玩家的一些道具数据或者其他数据，这个数据通常是查询mysql然后存到redis里面，最近在看JWT，发现了JWT里有一些弊端，譬如，撤销令牌并不怎么方便也很反人类，但是，如果把JWT的自描述和redis结合起来呢，就可以实现下面的构想 ...
+        
+      </div>
+      <a class="more" href="/2020/07/22/%E5%85%B3%E4%BA%8E%E6%B8%B8%E6%88%8F%E4%B8%AD%E7%94%A8%E6%88%B7%E7%BC%93%E5%AD%98%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%9E%84%E6%83%B3/">Read more</a>
+    </article>
+  
+    <article class="article-card">
+      <h2 class="article-head">
         <a href="/2020/07/20/RSA-%E9%9D%9E%E5%AF%B9%E7%A7%B0%E7%AE%97%E6%B3%95-%E5%B7%B2%E7%BB%8F-JWT%E4%B8%AD%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98/">RSA 非对称算法 以及JWT中存在的问题</a>
       </h2>
       <p class="article-date">July 20, 2020</p>
@@ -358,31 +378,6 @@ mysql 底层为什么是用b+树作为存储结构？为什么不是二叉树，
       <a class="more" href="/2020/05/03/java-0xff/">Read more</a>
     </article>
   
-    <article class="article-card">
-      <h2 class="article-head">
-        <a href="/2020/05/03/%E4%B8%80%E9%81%93%E7%88%AC%E6%A5%BC%E6%A2%AF%E9%97%AE%E9%A2%98%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/">一道爬楼梯问题引发的思考</a>
-      </h2>
-      <p class="article-date">May 3, 2020</p>
-      
-        
-  <a href="/tags#算法" >
-    <span class="tag-code">算法</span>
-  </a>
-
-  <a href="/tags#数据结构" >
-    <span class="tag-code">数据结构</span>
-  </a>
-
-      
-      <div class="article-summary">
-        
-          A1 用递归解决爬楼梯问题
-1234567public static int cs(int n)&#123;      if(n &lt;&#x3D; 3)&#123;          return n;      &#125;      return cs(n-1) + cs(n-2); ...
-        
-      </div>
-      <a class="more" href="/2020/05/03/%E4%B8%80%E9%81%93%E7%88%AC%E6%A5%BC%E6%A2%AF%E9%97%AE%E9%A2%98%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/">Read more</a>
-    </article>
-  
 
   
     <div class="guide-pager">
@@ -390,7 +385,7 @@ mysql 底层为什么是用b+树作为存储结构？为什么不是二叉树，
     <a href="/page/2/"><span class="page-arrow">← </span>Prev</a>
   
   
-    <a class="unvisible" href="/">Next <span class="page-arrow">→</span></a>
+    <a href="/page/4/">Next<span class="page-arrow"> →</span></a>
   
 </div>
   
